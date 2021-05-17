@@ -32,8 +32,10 @@ def github_webhook_endpoint():
         abort(400, "JSON does not contain PR base details")
     if "ref" not in github_webhook_data["pull_request"]["base"]:
         abort(400, "JSON does not contain PR base ref details")
+    # Upon setting a WebHook in a GitHub repo, GitHub sends a first
+    # test payload. The test payload does not have an 'action' field.
     if "action" not in github_webhook_data:
-        abort(400, "JSON does not contain PR action data")
+        return "JSON does not contain PR action data. This may be a GitHub test payload. Exiting..."
 
     # Obtain PyTorch PR information
     pr_base_ref = github_webhook_data["pull_request"]["base"]["ref"]
