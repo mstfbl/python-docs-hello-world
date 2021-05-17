@@ -1,3 +1,8 @@
+# This is a PyThon Flask app to listen for PR updates in the GitHub
+# PyTorch repository. Webhooks PRs that satisfy the conditions set
+# below trigger an Azure Pipelines run for running PyTorch custom
+# tests on the PR's appropriate artifact(s).
+
 import os
 import sys
 import requests
@@ -20,7 +25,7 @@ def index():
 
 @app.route("/prwebhook", methods=['POST'])
 def github_webhook_endpoint():
-    # Parse GitHub WebHook data
+    # Parse GitHub WebHook data, check if received JSON is valid.
     github_webhook_data = request.get_json()
     if github_webhook_data is None:
         abort(400, "Received JSON is NoneType")
@@ -40,8 +45,13 @@ def github_webhook_endpoint():
     # Obtain PyTorch PR information
     pr_base_ref = github_webhook_data["pull_request"]["base"]["ref"]
     pr_number = github_webhook_data["pull_request"]["number"]
+    # If the payload is not of an updated or newly opened PR, ignore.
     if github_webhook_data["action"] != "opened" and github_webhook_data["action"] != "synchronize":
         return "PR WebHook update is not that of a new opened or updated PR. Exiting..."
+    # If the payload is of a PR that is marked as draft, ignore.
+    if github_webhook_data["pull_request"]["draft"] == True:
+        return "PR is marked as draft. Exiting..."
+    # If the payload is of a PR not targeted tracked branches, ignore.
     if pr_base_ref not in GITHUB_PYTORCH_TRACKED_BRANCHES:
         return "PR does not target a targeted PyTorch branch. Exiting..."
 
