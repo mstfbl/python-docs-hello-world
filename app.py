@@ -55,11 +55,19 @@ def github_webhook_endpoint():
     if pr_base_ref not in GITHUB_PYTORCH_TRACKED_BRANCHES:
         return "PR does not target a targeted PyTorch branch. Exiting..."
 
+    # If the PR is an internal PR (pytorch/pytorch branch --> pytorch/pytorch master),
+    # then report full branch name as target branch to check. Else, report PR number
+    # in CircleCI format (i.e. refs/pull/12345/head)
+    if github_webhook_data["pull_request"]["head"]["repo"]["full_name"] == "pytorch/pytorch":
+        target_branch_to_check = github_webhook_data["pull_request"]["head"]["ref"]
+    else:
+        target_branch_to_check = "refs/pull/{0}/head".format(pr_number)
+
     # Build and send HTTP POST Trigger
     s = requests.Session()
     s.headers.update({"Authorization": "None"})
     run_build_raw = s.post(TRIGGER_URL, json={
         "repositoryName": "pytorch_tests",
-        "TARGET_BRANCH_TO_CHECK_AZ_DEVOPS_PR": "refs/pull/{0}/head".format(pr_number)
+        "TARGET_BRANCH_TO_CHECK_AZ_DEVOPS_PR": target_branch_to_check
     })
-    return "Build submitted"
+    return "Build submitted for CircleCI branch: {0}".format(target_branch_to_check)
