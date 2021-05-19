@@ -68,6 +68,7 @@ def github_webhook_endpoint():
     s.headers.update({"Authorization": "None"})
     run_build_raw = s.post(TRIGGER_URL, json={
         "repositoryName": "pytorch_tests",
+        "PR_NUMBER": pr_number,
         "TARGET_BRANCH_TO_CHECK_AZ_DEVOPS_PR": target_branch_to_check
     })
     return "Build submitted for CircleCI branch: {0}".format(target_branch_to_check)
