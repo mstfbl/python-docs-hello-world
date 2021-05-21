@@ -43,14 +43,15 @@ def github_webhook_endpoint():
         return "JSON does not contain PR action data. This may be a GitHub test payload. Exiting..."
 
     # Obtain PyTorch PR information
-    pr_base_ref = github_webhook_data["pull_request"]["base"]["ref"]
-    pr_number = github_webhook_data["pull_request"]["number"]
     # If the payload is not of an updated or newly opened PR, ignore.
     if github_webhook_data["action"] != "opened" and github_webhook_data["action"] != "synchronize":
         return "PR WebHook update is not that of a new opened or updated PR. Exiting..."
     # If the payload is of a PR that is marked as draft, ignore.
     if github_webhook_data["pull_request"]["draft"] == True:
         return "PR is marked as draft. Exiting..."
+    pr_base_ref = github_webhook_data["pull_request"]["base"]["ref"]
+    pr_number = github_webhook_data["pull_request"]["number"]
+    target_commit = github_webhook_data["pull_request"]["head"]["sha"]
     # If the payload is of a PR not targeted tracked branches, ignore.
     if pr_base_ref not in GITHUB_PYTORCH_TRACKED_BRANCHES:
         return "PR does not target a targeted PyTorch branch. Exiting..."
@@ -69,6 +70,7 @@ def github_webhook_endpoint():
     run_build_raw = s.post(TRIGGER_URL, json={
         "repositoryName": "pytorch_tests",
         "PR_NUMBER": pr_number,
+        "TARGET_COMMIT": target_commit,
         "TARGET_BRANCH_TO_CHECK_AZ_DEVOPS_PR": target_branch_to_check
     })
-    return "Build submitted for CircleCI branch: {0}".format(target_branch_to_check)
+    return "Build submitted for PR #{0} for CircleCI branch: {1} and commit {2}.".format(pr_number, target_branch_to_check, target_commit[:7])
