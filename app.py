@@ -7,7 +7,8 @@ import os
 import sys
 import requests
 import json
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, render_template
+from datetime import datetime
 app = Flask(__name__)
 
 # Azure DevOps WebHook trigger variables
@@ -18,6 +19,9 @@ TRIGGER_URL = AZURE_DEVOPS_BASE_WEBHOOK_URL + AZURE_DEVOPS_TRIGGER_NAME + AZURE_
 
 # List of GitHub PyTorch branches we are currently tracking for custom tests
 GITHUB_PYTORCH_TRACKED_BRANCHES = ("master")
+
+# Submitted payloads to Azure DevOps
+submitted_payloads_history = []
 
 @app.route("/")
 def index():
@@ -73,4 +77,12 @@ def github_webhook_endpoint():
         "TARGET_COMMIT": target_commit,
         "TARGET_BRANCH_TO_CHECK_AZ_DEVOPS_PR": target_branch_to_check
     })
+
+    # Add trigger to submitted payloads history list
+    submitted_payloads_history.append({"datetime": datetime.now().strftime("%m/%d/%Y %H:%M:%S")+" PDT", "pr_number": pr_number, "target_branch": target_branch_to_check, "target_commit": target_commit})
+
     return "Build submitted for PR #{0} for CircleCI branch: {1} and commit {2}.".format(pr_number, target_branch_to_check, target_commit[:7])
+
+@app.route("/pulls", methods=['GET'])
+def display_submitted_payloads_history():
+    return render_template('pulls_view.html', submitted_payloads_history=submitted_payloads_history)

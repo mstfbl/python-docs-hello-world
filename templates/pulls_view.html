@@ -1,0 +1,14 @@
+<table>
+    <thead><tr><th>Run</th><th>Date/Time</th><th>PR #</th><th>Target Commit</th><th>Target Branch</th></tr></thead>
+    <tbody>
+    {% for payload in submitted_payloads_history %}
+        <tr>
+            <td>{{ loop.index0 + 1}}</td>
+            <td>{{ payload["datetime"] }}</td>
+            <td><a href='https://github.com/pytorch/pytorch/pull/{{ payload["pr_number"] }}'>{{ payload["pr_number"] }}</a></td>
+            <td><a href='https://github.com/pytorch/pytorch/pull/{{ payload["pr_number"] }}/commits/{{ payload["target_commit"] }}'>{{ payload["target_commit"] }}</a></td>
+            <td>{{ payload["target_branch"] }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
