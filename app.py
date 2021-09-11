@@ -22,6 +22,7 @@ GITHUB_PYTORCH_TRACKED_BRANCHES = ("master")
 
 # Submitted payloads to Azure DevOps
 submitted_payloads_history = []
+jsons_of_triggered_prs = {}
 
 @app.route("/")
 def index():
@@ -80,9 +81,16 @@ def github_webhook_endpoint():
 
     # Add trigger to submitted payloads history list
     submitted_payloads_history.append({"datetime": datetime.now().strftime("%m/%d/%Y %H:%M:%S")+" PDT", "pr_number": pr_number, "target_branch": target_branch_to_check, "target_commit": target_commit})
+    jsons_of_triggered_prs[pr_number] = github_webhook_data
 
     return "Build submitted for PR #{0} for CircleCI branch: {1} and commit {2}.".format(pr_number, target_branch_to_check, target_commit[:7])
 
 @app.route("/pulls", methods=['GET'])
 def display_submitted_payloads_history():
     return render_template('pulls_view.html', submitted_payloads_history=submitted_payloads_history)
+
+@app.route("/jsons/<int:pr_number>")
+def display_submitted_payloads_history(pr_number):
+    if pr_number not in jsons_of_triggered_prs:
+        return "JSON of PR #{0} not found".format(pr_number)
+    return jsons_of_triggered_prs[pr_number]
