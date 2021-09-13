@@ -89,8 +89,8 @@ def github_webhook_endpoint():
 def display_submitted_payloads_history():
     return render_template('pulls_view.html', submitted_payloads_history=submitted_payloads_history)
 
-@app.route("/jsons/<int:pr_number>")
-def display_submitted_payloads_history(pr_number):
+@app.route("/jsons/<int:pr_number>", methods=['GET'])
+def display_submitted_jsons_history(pr_number):
     if pr_number not in jsons_of_triggered_prs:
         return "JSON of PR #{0} not found".format(pr_number)
     return jsons_of_triggered_prs[pr_number]
